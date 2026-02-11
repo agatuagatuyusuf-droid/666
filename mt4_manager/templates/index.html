@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MT4 多开管理工具</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>MT4 多开管理工具</h1>
+    <p>实例管理 / 分发 / 分组启动 / 日志 / 版本记录</p>
+  </header>
+
+  <section class="panel">
+    <h2>创建实例</h2>
+    <form id="create-form">
+      <input name="name" placeholder="实例名称" required />
+      <input name="group_name" placeholder="分组" value="default" />
+      <input name="template_path" placeholder="模板目录 (Windows路径)" required />
+      <input name="target_root" placeholder="实例根目录 (Windows路径)" required />
+      <button type="submit">一键创建</button>
+    </form>
+  </section>
+
+  <section class="grid">
+    {% for ins in instances %}
+    <article class="card">
+      <h3>{{ ins.name }}</h3>
+      <p>组: {{ ins.group_name }}</p>
+      <p>状态: {{ '运行中' if ins.running else '未运行' }} | EA: {{ ins.ea_status }}</p>
+      <p>账号: {{ ins.account_id or '-' }} | 余额: {{ '%.2f'|format(ins.account_balance) }}</p>
+      <p class="path">Experts: {{ ins.experts_path }}</p>
+      <p class="path">Indicators: {{ ins.indicators_path }}</p>
+      <details>
+        <summary>备注（可远程同步）</summary>
+        <textarea class="notes" data-id="{{ ins.id }}">{{ ins.notes }}</textarea>
+        <button class="save-notes" data-id="{{ ins.id }}">保存备注</button>
+      </details>
+      <div class="actions">
+        <button class="launch-btn" data-id="{{ ins.id }}">启动</button>
+        <button class="dist-ea" data-id="{{ ins.id }}">分发EA</button>
+        <button class="dist-ind" data-id="{{ ins.id }}">分发指标</button>
+      </div>
+    </article>
+    {% endfor %}
+  </section>
+
+  <section class="panel">
+    <h2>版本更新记录</h2>
+    <ul>
+      {% for v in versions %}
+      <li><strong>{{ v.version }}</strong> - {{ v.title }}（{{ v.created_at }}）<br/>{{ v.content }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="panel">
+    <h2>操作日志</h2>
+    <ul>
+      {% for l in logs %}
+      <li>[{{ l.created_at }}] {{ l.action }} / {{ l.target }} / {{ l.detail }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
