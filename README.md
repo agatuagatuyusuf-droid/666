@@ -48,6 +48,11 @@ python run.py
 
 访问：<http://127.0.0.1:8000>
 
+## 交付物
+
+- Windows 部署手册：`docs/windows_deploy.md`
+- MT4 状态上报 EA 模板：`mt4_templates/MT4StatusReporter.mq4`
+
 ## 说明
 
 - 目标运行环境：Windows（依赖 `terminal.exe`、`metaeditor.exe`）。
