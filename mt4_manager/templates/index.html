@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MT4 多开管理工具</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>MT4 多开管理工具</h1>
+    <p>实例管理 / 自动发现 / 克隆 / 编译分发 / 分组启动 / 符号链接</p>
+  </header>
+
+  <section class="panel">
+    <h2>自动发现实例</h2>
+    <form id="discover-form">
+      <input name="root_path" placeholder="扫描根目录 (Windows路径)" required />
+      <input name="group_name" placeholder="发现后归属分组" value="default" />
+      <input name="max_depth" type="number" value="4" min="1" max="10" />
+      <button type="submit">扫描并导入</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>创建实例</h2>
+    <form id="create-form">
+      <input name="name" placeholder="实例名称" required />
+      <input name="group_name" placeholder="分组" value="default" />
+      <input name="template_path" placeholder="模板目录 (Windows路径)" required />
+      <input name="target_root" placeholder="实例根目录 (Windows路径)" required />
+      <button type="submit">一键创建</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>克隆实例（仅保留有用EA/指标）</h2>
+    <form id="clone-form">
+      <input name="source_id" type="number" placeholder="源实例ID" required />
+      <input name="new_name" placeholder="新实例名称" required />
+      <input name="group_name" placeholder="分组" value="default" />
+      <input name="target_root" placeholder="实例根目录 (Windows路径)" required />
+      <label><input type="checkbox" name="keep_only_mql_assets" checked />仅保留MQL资产</label>
+      <button type="submit">一键克隆</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>MQ4 编译并分发</h2>
+    <form id="compile-dist-form">
+      <input name="source_instance_id" type="number" placeholder="编译源实例ID" required />
+      <input name="mq4_filename" placeholder="例如: MyEA.mq4" required />
+      <input name="group_name" placeholder="目标分组（留空=全部）" />
+      <button type="submit">一键编译并分发EX4</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>批量操作</h2>
+    <select id="group-select">
+      <option value="">全部分组</option>
+      {% for g in groups %}
+      <option value="{{ g }}">{{ g }}</option>
+      {% endfor %}
+    </select>
+    <button id="launch-group-btn">按组启动</button>
+    <button id="launch-all-btn">启动全部</button>
+    <button id="dist-group-ea-btn">按组分发EA</button>
+    <button id="dist-group-ind-btn">按组分发指标</button>
+  </section>
+
+  <section class="panel">
+    <h2>统一符号链接</h2>
+    <form id="symlink-form">
+      <input name="master_experts_path" placeholder="主 Experts 目录" required />
+      <input name="master_indicators_path" placeholder="主 Indicators 目录" required />
+      <button type="submit">应用到全部实例</button>
+    </form>
+  </section>
+
+  <section class="grid">
+    {% for ins in instances %}
+    <article class="card">
+      <h3>{{ ins.name }} <small>#{{ ins.id }}</small></h3>
+      <p>组: {{ ins.group_name }}</p>
+      <p>状态: {{ '运行中' if ins.running else '未运行' }} | EA: {{ ins.ea_status }}</p>
+      <p>账号: {{ ins.account_id or '-' }} | 余额: {{ '%.2f'|format(ins.account_balance) }} | 净值: {{ '%.2f'|format(ins.equity) }}</p>
+      <p class="path">Experts: {{ ins.experts_path }}</p>
+      <p class="path">Indicators: {{ ins.indicators_path }}</p>
+      <div class="actions">
+        <input class="rename-input" data-id="{{ ins.id }}" placeholder="重命名" />
+        <button class="rename-btn" data-id="{{ ins.id }}">改名</button>
+      </div>
+      <div class="actions">
+        <input class="group-input" data-id="{{ ins.id }}" placeholder="修改分组" />
+        <button class="group-btn" data-id="{{ ins.id }}">改组</button>
+      </div>
+      <details>
+        <summary>备注（可远程同步）</summary>
+        <textarea class="notes" data-id="{{ ins.id }}">{{ ins.notes }}</textarea>
+        <button class="save-notes" data-id="{{ ins.id }}">保存备注</button>
+      </details>
+      <div class="actions">
+        <button class="launch-btn" data-id="{{ ins.id }}">启动</button>
+        <button class="dist-ea" data-id="{{ ins.id }}">分发EA</button>
+        <button class="dist-ind" data-id="{{ ins.id }}">分发指标</button>
+        <button class="delete-btn" data-id="{{ ins.id }}">删除实例</button>
+      </div>
+    </article>
+    {% endfor %}
+  </section>
+
+  <section class="panel">
+    <h2>版本更新记录</h2>
+    <ul>
+      {% for v in versions %}
+      <li><strong>{{ v.version }}</strong> - {{ v.title }}（{{ v.created_at }}）<br/>{{ v.content }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="panel">
+    <h2>操作日志</h2>
+    <ul>
+      {% for l in logs %}
+      <li>[{{ l.created_at }}] {{ l.action }} / {{ l.target }} / {{ l.detail }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
