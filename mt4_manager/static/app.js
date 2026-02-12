@@ -26,6 +26,24 @@ document.getElementById('create-form')?.addEventListener('submit', async (e) => 
   }
 });
 
+document.getElementById('clone-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const payload = {
+    source_id: Number(form.get('source_id')),
+    new_name: String(form.get('new_name')),
+    group_name: String(form.get('group_name') || 'default'),
+    target_root: String(form.get('target_root')),
+    keep_only_mql_assets: form.get('keep_only_mql_assets') === 'on',
+  };
+  try {
+    await requestJSON('/api/instances/clone', 'POST', payload);
+    location.reload();
+  } catch (err) {
+    alert('克隆失败: ' + err.message);
+  }
+});
+
 document.querySelectorAll('.launch-btn').forEach((btn) => btn.addEventListener('click', async () => {
   try {
     await requestJSON(`/api/instances/${btn.dataset.id}/launch`, 'POST', {});

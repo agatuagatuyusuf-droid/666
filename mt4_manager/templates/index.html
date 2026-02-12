@@ -9,7 +9,7 @@
 <body>
   <header>
     <h1>MT4 多开管理工具</h1>
-    <p>实例管理 / 分发 / 分组启动 / 日志 / 版本记录</p>
+    <p>实例管理 / 克隆 / 分发 / 分组启动 / 日志 / 版本记录</p>
   </header>
 
   <section class="panel">
@@ -20,6 +20,18 @@
       <input name="template_path" placeholder="模板目录 (Windows路径)" required />
       <input name="target_root" placeholder="实例根目录 (Windows路径)" required />
       <button type="submit">一键创建</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>克隆实例（仅保留有用EA/指标）</h2>
+    <form id="clone-form">
+      <input name="source_id" type="number" placeholder="源实例ID" required />
+      <input name="new_name" placeholder="新实例名称" required />
+      <input name="group_name" placeholder="分组" value="default" />
+      <input name="target_root" placeholder="实例根目录 (Windows路径)" required />
+      <label><input type="checkbox" name="keep_only_mql_assets" checked />仅保留MQL资产</label>
+      <button type="submit">一键克隆</button>
     </form>
   </section>
 
@@ -40,7 +52,7 @@
   <section class="grid">
     {% for ins in instances %}
     <article class="card">
-      <h3>{{ ins.name }}</h3>
+      <h3>{{ ins.name }} <small>#{{ ins.id }}</small></h3>
       <p>组: {{ ins.group_name }}</p>
       <p>状态: {{ '运行中' if ins.running else '未运行' }} | EA: {{ ins.ea_status }}</p>
       <p>账号: {{ ins.account_id or '-' }} | 余额: {{ '%.2f'|format(ins.account_balance) }} | 净值: {{ '%.2f'|format(ins.equity) }}</p>
