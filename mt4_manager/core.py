@@ -23,6 +23,9 @@ def ensure_mt4_layout(base_path: Path) -> tuple[Path, Path, Path]:
 
 
 def create_instance_from_template(name: str, group_name: str, template_path: Path, target_root: Path) -> Path:
+    _ = group_name
+    if not template_path.exists():
+        raise FileNotFoundError(f"template path not found: {template_path}")
     target_dir = target_root / name
     if target_dir.exists():
         raise FileExistsError(f"Instance folder already exists: {target_dir}")
@@ -32,6 +35,8 @@ def create_instance_from_template(name: str, group_name: str, template_path: Pat
 
 
 def clone_instance_folder(source: Path, target: Path, keep_only_mql_assets: bool) -> None:
+    if not source.exists():
+        raise FileNotFoundError(f"source not found: {source}")
     if target.exists():
         raise FileExistsError(f"Clone target exists: {target}")
     if keep_only_mql_assets:
@@ -92,8 +97,9 @@ def compile_mq4(instance: MT4Instance, mq4_filename: str) -> dict:
     if not source.exists():
         return {"ok": False, "reason": f"source not found: {source}"}
 
+    compile_arg = f"/compile:{source}"
     proc = subprocess.run(
-        [str(meteditor), "/compile:", str(source), "/log"],
+        [str(meteditor), compile_arg, "/log"],
         capture_output=True,
         text=True,
         timeout=120,

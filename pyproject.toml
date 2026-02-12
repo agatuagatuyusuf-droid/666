@@ -1,6 +1,10 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "mt4-multi-manager"
-version = "0.1.0"
+version = "0.2.0"
 description = "MT4 multi-instance management tool"
 requires-python = ">=3.11"
 dependencies = [

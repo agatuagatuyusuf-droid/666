@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -36,7 +36,7 @@ from .schemas import (
     VersionCreate,
 )
 
-app = FastAPI(title="MT4 多开管理工具", version="0.1.0")
+app = FastAPI(title="MT4 多开管理工具", version="0.2.0")
 app.mount("/static", StaticFiles(directory="mt4_manager/static"), name="static")
 templates = Jinja2Templates(directory="mt4_manager/templates")
 
@@ -51,15 +51,17 @@ def index(request: Request, session: Session = Depends(get_session)):
     instances = list(session.exec(select(MT4Instance).order_by(MT4Instance.id.desc())))
     logs = list(session.exec(select(OperationLog).order_by(OperationLog.id.desc()).limit(50)))
     versions = list(session.exec(select(VersionRecord).order_by(VersionRecord.created_at.desc()).limit(20)))
+    groups = sorted({ins.group_name for ins in instances})
     return templates.TemplateResponse(
         "index.html",
-        {
-            "request": request,
-            "instances": instances,
-            "logs": logs,
-            "versions": versions,
-        },
+        {"request": request, "instances": instances, "logs": logs, "versions": versions, "groups": groups},
     )
+
+
+@app.get("/api/groups")
+def list_groups(session: Session = Depends(get_session)):
+    instances = list(session.exec(select(MT4Instance)))
+    return sorted({ins.group_name for ins in instances})
 
 
 @app.post("/api/instances")
@@ -105,8 +107,11 @@ def clone_instance(payload: InstanceClone, session: Session = Depends(get_sessio
 
 
 @app.get("/api/instances")
-def list_instances(session: Session = Depends(get_session)):
-    return list(session.exec(select(MT4Instance)))
+def list_instances(session: Session = Depends(get_session), group_name: str | None = Query(default=None)):
+    stmt = select(MT4Instance)
+    if group_name:
+        stmt = stmt.where(MT4Instance.group_name == group_name)
+    return list(session.exec(stmt.order_by(MT4Instance.id.desc())))
 
 
 @app.patch("/api/instances/{instance_id}/rename")
@@ -155,7 +160,10 @@ def distribute(payload: DistributeRequest, session: Session = Depends(get_sessio
     selected = select_instances(session, payload.instance_ids, payload.group_name, payload.all_instances)
     if not selected:
         raise HTTPException(400, "no target instances selected")
-    results = distribute_file(selected, Path(payload.file_path), payload.target_type)
+    try:
+        results = distribute_file(selected, Path(payload.file_path), payload.target_type)
+    except (ValueError, FileNotFoundError) as exc:
+        raise HTTPException(400, str(exc)) from exc
     append_log(session, "distribute_file", payload.file_path, {"targets": len(results), "type": payload.target_type})
     return {"results": results}
 
@@ -165,7 +173,10 @@ def symlink(payload: SymlinkRequest, session: Session = Depends(get_session)):
     selected = select_instances(session, payload.instance_ids, None, payload.all_instances)
     if not selected:
         raise HTTPException(400, "no target instances selected")
-    results = setup_symlinks(selected, Path(payload.master_experts_path), Path(payload.master_indicators_path))
+    try:
+        results = setup_symlinks(selected, Path(payload.master_experts_path), Path(payload.master_indicators_path))
+    except OSError as exc:
+        raise HTTPException(400, f"symlink failed: {exc}") from exc
     append_log(session, "setup_symlink", "bulk", {"targets": len(results)})
     return {"results": results}
 
@@ -241,12 +252,7 @@ def upload_backtest(payload: BacktestUpload, session: Session = Depends(get_sess
 def compare_backtests(strategy_name: str, session: Session = Depends(get_session)):
     rows = list(session.exec(select(BacktestReport).where(BacktestReport.strategy_name == strategy_name)))
     rows_sorted = sorted(rows, key=lambda x: x.net_profit, reverse=True)
-    return {
-        "strategy_name": strategy_name,
-        "count": len(rows_sorted),
-        "best": rows_sorted[0] if rows_sorted else None,
-        "items": rows_sorted,
-    }
+    return {"strategy_name": strategy_name, "count": len(rows_sorted), "best": rows_sorted[0] if rows_sorted else None, "items": rows_sorted}
 
 
 @app.post("/api/versions")

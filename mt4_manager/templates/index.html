@@ -23,13 +23,27 @@
     </form>
   </section>
 
+  <section class="panel">
+    <h2>批量操作</h2>
+    <select id="group-select">
+      <option value="">全部分组</option>
+      {% for g in groups %}
+      <option value="{{ g }}">{{ g }}</option>
+      {% endfor %}
+    </select>
+    <button id="launch-group-btn">按组启动</button>
+    <button id="launch-all-btn">启动全部</button>
+    <button id="dist-group-ea-btn">按组分发EA</button>
+    <button id="dist-group-ind-btn">按组分发指标</button>
+  </section>
+
   <section class="grid">
     {% for ins in instances %}
     <article class="card">
       <h3>{{ ins.name }}</h3>
       <p>组: {{ ins.group_name }}</p>
       <p>状态: {{ '运行中' if ins.running else '未运行' }} | EA: {{ ins.ea_status }}</p>
-      <p>账号: {{ ins.account_id or '-' }} | 余额: {{ '%.2f'|format(ins.account_balance) }}</p>
+      <p>账号: {{ ins.account_id or '-' }} | 余额: {{ '%.2f'|format(ins.account_balance) }} | 净值: {{ '%.2f'|format(ins.equity) }}</p>
       <p class="path">Experts: {{ ins.experts_path }}</p>
       <p class="path">Indicators: {{ ins.indicators_path }}</p>
       <details>
