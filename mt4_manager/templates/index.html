@@ -9,7 +9,7 @@
 <body>
   <header>
     <h1>MT4 多开管理工具</h1>
-    <p>实例管理 / 自动发现 / 克隆 / 分发 / 分组启动 / 符号链接</p>
+    <p>实例管理 / 自动发现 / 克隆 / 编译分发 / 分组启动 / 符号链接</p>
   </header>
 
   <section class="panel">
@@ -42,6 +42,16 @@
       <input name="target_root" placeholder="实例根目录 (Windows路径)" required />
       <label><input type="checkbox" name="keep_only_mql_assets" checked />仅保留MQL资产</label>
       <button type="submit">一键克隆</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>MQ4 编译并分发</h2>
+    <form id="compile-dist-form">
+      <input name="source_instance_id" type="number" placeholder="编译源实例ID" required />
+      <input name="mq4_filename" placeholder="例如: MyEA.mq4" required />
+      <input name="group_name" placeholder="目标分组（留空=全部）" />
+      <button type="submit">一键编译并分发EX4</button>
     </form>
   </section>
 
@@ -94,6 +104,7 @@
         <button class="launch-btn" data-id="{{ ins.id }}">启动</button>
         <button class="dist-ea" data-id="{{ ins.id }}">分发EA</button>
         <button class="dist-ind" data-id="{{ ins.id }}">分发指标</button>
+        <button class="delete-btn" data-id="{{ ins.id }}">删除实例</button>
       </div>
     </article>
     {% endfor %}

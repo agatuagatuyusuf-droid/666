@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from datetime import datetime
 from pathlib import Path
 
@@ -26,6 +27,7 @@ from .db import get_session, init_db
 from .models import BacktestReport, CloudSyncEvent, MT4Instance, OperationLog, VersionRecord
 from .schemas import (
     BacktestUpload,
+    CompileDistributeRequest,
     DiscoverRequest,
     DistributeRequest,
     GroupUpdate,
@@ -38,7 +40,7 @@ from .schemas import (
     VersionCreate,
 )
 
-app = FastAPI(title="MT4 多开管理工具", version="0.3.0")
+app = FastAPI(title="MT4 多开管理工具", version="1.0.0")
 app.mount("/static", StaticFiles(directory="mt4_manager/static"), name="static")
 templates = Jinja2Templates(directory="mt4_manager/templates")
 
@@ -46,6 +48,11 @@ templates = Jinja2Templates(directory="mt4_manager/templates")
 @app.on_event("startup")
 def on_startup() -> None:
     init_db()
+
+
+@app.get("/health")
+def health():
+    return {"ok": True, "version": app.version}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -137,6 +144,21 @@ def clone_instance(payload: InstanceClone, session: Session = Depends(get_sessio
     return ins
 
 
+@app.delete("/api/instances/{instance_id}")
+def delete_instance(instance_id: int, delete_files: bool = False, session: Session = Depends(get_session)):
+    ins = session.get(MT4Instance, instance_id)
+    if not ins:
+        raise HTTPException(404, "instance not found")
+    base_path = Path(ins.base_path)
+    name = ins.name
+    session.delete(ins)
+    session.commit()
+    if delete_files and base_path.exists():
+        shutil.rmtree(base_path, ignore_errors=True)
+    append_log(session, "delete_instance", name, {"id": instance_id, "delete_files": delete_files})
+    return {"ok": True}
+
+
 @app.get("/api/instances")
 def list_instances(session: Session = Depends(get_session), group_name: str | None = Query(default=None)):
     stmt = select(MT4Instance)
@@ -197,6 +219,31 @@ def distribute(payload: DistributeRequest, session: Session = Depends(get_sessio
         raise HTTPException(400, str(exc)) from exc
     append_log(session, "distribute_file", payload.file_path, {"targets": len(results), "type": payload.target_type})
     return {"results": results}
+
+
+@app.post("/api/distribute/compile")
+def compile_and_distribute(payload: CompileDistributeRequest, session: Session = Depends(get_session)):
+    source = session.get(MT4Instance, payload.source_instance_id)
+    if not source:
+        raise HTTPException(404, "source instance not found")
+
+    compile_result = compile_mq4(source, payload.mq4_filename)
+    if not compile_result.get("ok"):
+        append_log(session, "compile_and_distribute", source.name, compile_result)
+        raise HTTPException(400, compile_result.get("reason") or "compile failed")
+
+    ex4_path = Path(compile_result["ex4_path"])
+    selected = select_instances(session, payload.instance_ids, payload.group_name, payload.all_instances)
+    if not selected:
+        raise HTTPException(400, "no target instances selected")
+    results = distribute_file(selected, ex4_path, "experts")
+    append_log(
+        session,
+        "compile_and_distribute",
+        source.name,
+        {"mq4": payload.mq4_filename, "ex4": str(ex4_path), "targets": len(results)},
+    )
+    return {"compile": compile_result, "results": results}
 
 
 @app.post("/api/symlink")

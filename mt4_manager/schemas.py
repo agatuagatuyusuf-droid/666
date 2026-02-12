@@ -44,6 +44,14 @@ class DistributeRequest(BaseModel):
     all_instances: bool = False
 
 
+class CompileDistributeRequest(BaseModel):
+    source_instance_id: int
+    mq4_filename: str
+    instance_ids: list[int] | None = None
+    group_name: str | None = None
+    all_instances: bool = False
+
+
 class SymlinkRequest(BaseModel):
     master_experts_path: str
     master_indicators_path: str

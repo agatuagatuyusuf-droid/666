@@ -36,6 +36,11 @@ def discover_instance_paths(root_path: Path, max_depth: int = 4) -> list[Path]:
     return sorted(set(roots))
 
 
+def mq4_to_ex4_filename(filename: str) -> str:
+    path = Path(filename)
+    return f"{path.stem}.ex4"
+
+
 def create_instance_from_template(name: str, group_name: str, template_path: Path, target_root: Path) -> Path:
     _ = group_name
     if not template_path.exists():
@@ -118,7 +123,12 @@ def compile_mq4(instance: MT4Instance, mq4_filename: str) -> dict:
         text=True,
         timeout=120,
     )
-    return {"ok": proc.returncode == 0, "stdout": proc.stdout[-2000:], "stderr": proc.stderr[-2000:]}
+    return {
+        "ok": proc.returncode == 0,
+        "stdout": proc.stdout[-2000:],
+        "stderr": proc.stderr[-2000:],
+        "ex4_path": str(Path(instance.experts_path) / mq4_to_ex4_filename(mq4_filename)),
+    }
 
 
 def launch_instance(instance: MT4Instance) -> dict:

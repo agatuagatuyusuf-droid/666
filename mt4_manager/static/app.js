@@ -57,6 +57,24 @@ document.getElementById('clone-form')?.addEventListener('submit', async (e) => {
   }
 });
 
+document.getElementById('compile-dist-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const group = String(form.get('group_name') || '').trim();
+  const payload = {
+    source_instance_id: Number(form.get('source_instance_id')),
+    mq4_filename: String(form.get('mq4_filename')),
+    all_instances: !group,
+  };
+  if (group) payload.group_name = group;
+  try {
+    const res = await requestJSON('/api/distribute/compile', 'POST', payload);
+    alert(`编译成功并分发到 ${res.results.length} 个实例`);
+  } catch (err) {
+    alert('编译分发失败: ' + err.message);
+  }
+});
+
 document.getElementById('symlink-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const payload = Object.fromEntries(new FormData(e.target).entries());
@@ -85,6 +103,18 @@ document.querySelectorAll('.group-btn').forEach((btn) => btn.addEventListener('c
   if (!input?.value) return alert('请输入分组名');
   try {
     await requestJSON(`/api/instances/${btn.dataset.id}/group`, 'PATCH', { group_name: input.value });
+    location.reload();
+  } catch (err) {
+    alert(err.message);
+  }
+}));
+
+document.querySelectorAll('.delete-btn').forEach((btn) => btn.addEventListener('click', async () => {
+  const hard = confirm('是否同时删除实例目录文件？取消则仅从管理器移除。');
+  const ok = confirm('确认删除这个实例吗？');
+  if (!ok) return;
+  try {
+    await requestJSON(`/api/instances/${btn.dataset.id}?delete_files=${hard}`, 'DELETE');
     location.reload();
   } catch (err) {
     alert(err.message);

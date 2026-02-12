@@ -10,6 +10,7 @@ from mt4_manager.core import (
     discover_instance_paths,
     distribute_file,
     ensure_mt4_layout,
+    mq4_to_ex4_filename,
 )
 from mt4_manager.models import MT4Instance
 
@@ -36,6 +37,19 @@ def test_discover_instance_paths(tmp_path: Path):
     found = discover_instance_paths(tmp_path, max_depth=4)
     assert inst_a in found
     assert inst_b in found
+
+
+def test_discover_depth_limit(tmp_path: Path):
+    deep = tmp_path / "a" / "b" / "c" / "d" / "e"
+    deep.mkdir(parents=True)
+    (deep / "terminal.exe").write_text("x")
+    found = discover_instance_paths(tmp_path, max_depth=3)
+    assert deep not in found
+
+
+def test_mq4_to_ex4_filename():
+    assert mq4_to_ex4_filename("MyEA.mq4") == "MyEA.ex4"
+    assert mq4_to_ex4_filename("abc") == "abc.ex4"
 
 
 def test_create_instance_missing_template(tmp_path: Path):
