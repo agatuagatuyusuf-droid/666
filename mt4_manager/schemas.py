@@ -30,6 +30,12 @@ class GroupUpdate(BaseModel):
     group_name: str
 
 
+class DiscoverRequest(BaseModel):
+    root_path: str
+    group_name: str = "default"
+    max_depth: int = 4
+
+
 class DistributeRequest(BaseModel):
     file_path: str
     target_type: str  # experts | indicators

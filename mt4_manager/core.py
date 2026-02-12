@@ -22,6 +22,20 @@ def ensure_mt4_layout(base_path: Path) -> tuple[Path, Path, Path]:
     return terminal, experts, indicators
 
 
+def discover_instance_paths(root_path: Path, max_depth: int = 4) -> list[Path]:
+    if not root_path.exists():
+        raise FileNotFoundError(f"root path not found: {root_path}")
+    roots: list[Path] = []
+    for candidate in root_path.rglob("terminal.exe"):
+        try:
+            rel_depth = len(candidate.relative_to(root_path).parts)
+        except ValueError:
+            continue
+        if rel_depth <= max_depth:
+            roots.append(candidate.parent)
+    return sorted(set(roots))
+
+
 def create_instance_from_template(name: str, group_name: str, template_path: Path, target_root: Path) -> Path:
     _ = group_name
     if not template_path.exists():

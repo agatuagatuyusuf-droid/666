@@ -15,6 +15,19 @@ function askFile(label) {
   return value;
 }
 
+document.getElementById('discover-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
+  data.max_depth = Number(data.max_depth || 4);
+  try {
+    const res = await requestJSON('/api/instances/discover', 'POST', data);
+    alert(`扫描到 ${res.found} 个终端，新增 ${res.created.length} 个实例`);
+    location.reload();
+  } catch (err) {
+    alert('自动发现失败: ' + err.message);
+  }
+});
+
 document.getElementById('create-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const payload = Object.fromEntries(new FormData(e.target).entries());
@@ -43,6 +56,40 @@ document.getElementById('clone-form')?.addEventListener('submit', async (e) => {
     alert('克隆失败: ' + err.message);
   }
 });
+
+document.getElementById('symlink-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = Object.fromEntries(new FormData(e.target).entries());
+  payload.all_instances = true;
+  try {
+    const res = await requestJSON('/api/symlink', 'POST', payload);
+    alert(`已应用符号链接到 ${res.results.length} 个实例`);
+  } catch (err) {
+    alert('符号链接失败: ' + err.message);
+  }
+});
+
+document.querySelectorAll('.rename-btn').forEach((btn) => btn.addEventListener('click', async () => {
+  const input = document.querySelector(`.rename-input[data-id="${btn.dataset.id}"]`);
+  if (!input?.value) return alert('请输入新名称');
+  try {
+    await requestJSON(`/api/instances/${btn.dataset.id}/rename`, 'PATCH', { name: input.value });
+    location.reload();
+  } catch (err) {
+    alert(err.message);
+  }
+}));
+
+document.querySelectorAll('.group-btn').forEach((btn) => btn.addEventListener('click', async () => {
+  const input = document.querySelector(`.group-input[data-id="${btn.dataset.id}"]`);
+  if (!input?.value) return alert('请输入分组名');
+  try {
+    await requestJSON(`/api/instances/${btn.dataset.id}/group`, 'PATCH', { group_name: input.value });
+    location.reload();
+  } catch (err) {
+    alert(err.message);
+  }
+}));
 
 document.querySelectorAll('.launch-btn').forEach((btn) => btn.addEventListener('click', async () => {
   try {

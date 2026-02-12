@@ -9,8 +9,18 @@
 <body>
   <header>
     <h1>MT4 多开管理工具</h1>
-    <p>实例管理 / 克隆 / 分发 / 分组启动 / 日志 / 版本记录</p>
+    <p>实例管理 / 自动发现 / 克隆 / 分发 / 分组启动 / 符号链接</p>
   </header>
+
+  <section class="panel">
+    <h2>自动发现实例</h2>
+    <form id="discover-form">
+      <input name="root_path" placeholder="扫描根目录 (Windows路径)" required />
+      <input name="group_name" placeholder="发现后归属分组" value="default" />
+      <input name="max_depth" type="number" value="4" min="1" max="10" />
+      <button type="submit">扫描并导入</button>
+    </form>
+  </section>
 
   <section class="panel">
     <h2>创建实例</h2>
@@ -49,6 +59,15 @@
     <button id="dist-group-ind-btn">按组分发指标</button>
   </section>
 
+  <section class="panel">
+    <h2>统一符号链接</h2>
+    <form id="symlink-form">
+      <input name="master_experts_path" placeholder="主 Experts 目录" required />
+      <input name="master_indicators_path" placeholder="主 Indicators 目录" required />
+      <button type="submit">应用到全部实例</button>
+    </form>
+  </section>
+
   <section class="grid">
     {% for ins in instances %}
     <article class="card">
@@ -58,6 +77,14 @@
       <p>账号: {{ ins.account_id or '-' }} | 余额: {{ '%.2f'|format(ins.account_balance) }} | 净值: {{ '%.2f'|format(ins.equity) }}</p>
       <p class="path">Experts: {{ ins.experts_path }}</p>
       <p class="path">Indicators: {{ ins.indicators_path }}</p>
+      <div class="actions">
+        <input class="rename-input" data-id="{{ ins.id }}" placeholder="重命名" />
+        <button class="rename-btn" data-id="{{ ins.id }}">改名</button>
+      </div>
+      <div class="actions">
+        <input class="group-input" data-id="{{ ins.id }}" placeholder="修改分组" />
+        <button class="group-btn" data-id="{{ ins.id }}">改组</button>
+      </div>
       <details>
         <summary>备注（可远程同步）</summary>
         <textarea class="notes" data-id="{{ ins.id }}">{{ ins.notes }}</textarea>

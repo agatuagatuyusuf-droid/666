@@ -4,7 +4,13 @@ import pytest
 
 pytest.importorskip("sqlmodel")
 
-from mt4_manager.core import clone_instance_folder, create_instance_from_template, distribute_file, ensure_mt4_layout
+from mt4_manager.core import (
+    clone_instance_folder,
+    create_instance_from_template,
+    discover_instance_paths,
+    distribute_file,
+    ensure_mt4_layout,
+)
 from mt4_manager.models import MT4Instance
 
 
@@ -17,6 +23,19 @@ def test_create_and_layout(tmp_path: Path):
     assert (created / "terminal.exe").exists()
     assert experts.exists()
     assert indicators.exists()
+
+
+def test_discover_instance_paths(tmp_path: Path):
+    inst_a = tmp_path / "mt4_a"
+    inst_b = tmp_path / "x" / "mt4_b"
+    inst_a.mkdir(parents=True)
+    inst_b.mkdir(parents=True)
+    (inst_a / "terminal.exe").write_text("a")
+    (inst_b / "terminal.exe").write_text("b")
+
+    found = discover_instance_paths(tmp_path, max_depth=4)
+    assert inst_a in found
+    assert inst_b in found
 
 
 def test_create_instance_missing_template(tmp_path: Path):

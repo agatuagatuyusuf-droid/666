@@ -15,6 +15,7 @@ from .core import (
     clone_instance_folder,
     compile_mq4,
     create_instance_from_template,
+    discover_instance_paths,
     distribute_file,
     ensure_mt4_layout,
     launch_instance,
@@ -25,6 +26,7 @@ from .db import get_session, init_db
 from .models import BacktestReport, CloudSyncEvent, MT4Instance, OperationLog, VersionRecord
 from .schemas import (
     BacktestUpload,
+    DiscoverRequest,
     DistributeRequest,
     GroupUpdate,
     InstanceClone,
@@ -36,7 +38,7 @@ from .schemas import (
     VersionCreate,
 )
 
-app = FastAPI(title="MT4 多开管理工具", version="0.2.0")
+app = FastAPI(title="MT4 多开管理工具", version="0.3.0")
 app.mount("/static", StaticFiles(directory="mt4_manager/static"), name="static")
 templates = Jinja2Templates(directory="mt4_manager/templates")
 
@@ -81,6 +83,35 @@ def create_instance(payload: InstanceCreate, session: Session = Depends(get_sess
     session.refresh(ins)
     append_log(session, "create_instance", ins.name, {"id": ins.id, "path": str(target_dir)})
     return ins
+
+
+@app.post("/api/instances/discover")
+def discover_instances(payload: DiscoverRequest, session: Session = Depends(get_session)):
+    try:
+        roots = discover_instance_paths(Path(payload.root_path), payload.max_depth)
+    except FileNotFoundError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+    known = {ins.base_path for ins in session.exec(select(MT4Instance))}
+    created = []
+    for root in roots:
+        if str(root) in known:
+            continue
+        terminal, experts, indicators = ensure_mt4_layout(root)
+        ins = MT4Instance(
+            name=root.name,
+            group_name=payload.group_name,
+            base_path=str(root),
+            terminal_path=str(terminal),
+            experts_path=str(experts),
+            indicators_path=str(indicators),
+        )
+        session.add(ins)
+        session.commit()
+        session.refresh(ins)
+        created.append(ins)
+    append_log(session, "discover_instances", payload.root_path, {"found": len(roots), "created": len(created)})
+    return {"found": len(roots), "created": created}
 
 
 @app.post("/api/instances/clone")

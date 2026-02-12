@@ -3,22 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MT4 多开管理工具 - 界面预览</title>
+  <title>MT4 多开管理工具 - Final 预览</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <header>
-    <h1>MT4 多开管理工具（界面预览）</h1>
-    <p>实例管理 / 克隆 / 分发 / 分组启动 / 实时状态</p>
-  </header>
-
-  <section class="panel"><h2>创建实例</h2><form><input placeholder="实例名称"/><input placeholder="分组"/><input placeholder="模板目录"/><input placeholder="实例根目录"/><button>一键创建</button></form></section>
-  <section class="panel"><h2>克隆实例（仅保留有用EA/指标）</h2><form><input placeholder="源实例ID"/><input placeholder="新实例名称"/><input placeholder="分组"/><input placeholder="实例根目录"/><label><input type="checkbox" checked/>仅保留MQL资产</label><button>一键克隆</button></form></section>
-  <section class="panel"><h2>批量操作</h2><select><option>全部分组</option><option>trend</option><option>hedge</option></select><button>按组启动</button><button>启动全部</button><button>按组分发EA</button><button>按组分发指标</button></section>
-
+  <header><h1>MT4 多开管理工具（Final 预览）</h1><p>自动发现 / 创建 / 克隆 / 分发 / 启动 / 符号链接</p></header>
+  <section class="panel"><h2>自动发现实例</h2><form><input placeholder="扫描根目录"/><input placeholder="分组"/><input placeholder="max_depth"/><button>扫描并导入</button></form></section>
+  <section class="panel"><h2>统一符号链接</h2><form><input placeholder="主 Experts"/><input placeholder="主 Indicators"/><button>应用到全部实例</button></form></section>
   <section class="grid">
-    <article class="card"><h3>EU趋势_01 <small>#1</small></h3><p>组: trend</p><p>状态: 运行中 | EA: active</p><p>账号: 123456 | 余额: 10234.55 | 净值: 10301.10</p><p class="path">Experts: D:\\MT4\\A\\MQL4\\Experts</p><p class="path">Indicators: D:\\MT4\\A\\MQL4\\Indicators</p><details><summary>备注</summary><textarea class="notes">这个实例跑欧盘趋势策略。</textarea><button>保存备注</button></details><div class="actions"><button>启动</button><button>分发EA</button><button>分发指标</button></div></article>
-    <article class="card"><h3>XAU对冲_A <small>#2</small></h3><p>组: hedge</p><p>状态: 未运行 | EA: idle</p><p>账号: 888001 | 余额: 5000.00 | 净值: 5000.00</p><p class="path">Experts: D:\\MT4\\B\\MQL4\\Experts</p><p class="path">Indicators: D:\\MT4\\B\\MQL4\\Indicators</p><details><summary>备注</summary><textarea class="notes">用于黄金对冲实验。</textarea><button>保存备注</button></details><div class="actions"><button>启动</button><button>分发EA</button><button>分发指标</button></div></article>
+    <article class="card"><h3>EU趋势_01 <small>#1</small></h3><p>组: trend</p><p>状态: 运行中 | EA: active</p><p>账号: 123456 | 余额: 10234.55 | 净值: 10301.10</p><p class="path">Experts: D:\\MT4\\A\\MQL4\\Experts</p><p class="path">Indicators: D:\\MT4\\A\\MQL4\\Indicators</p><div class="actions"><input placeholder="重命名"/><button>改名</button></div><div class="actions"><input placeholder="修改分组"/><button>改组</button></div><div class="actions"><button>启动</button><button>分发EA</button><button>分发指标</button></div></article>
+    <article class="card"><h3>XAU对冲_A <small>#2</small></h3><p>组: hedge</p><p>状态: 未运行 | EA: idle</p><p>账号: 888001 | 余额: 5000.00 | 净值: 5000.00</p><p class="path">Experts: D:\\MT4\\B\\MQL4\\Experts</p><p class="path">Indicators: D:\\MT4\\B\\MQL4\\Indicators</p><div class="actions"><input placeholder="重命名"/><button>改名</button></div><div class="actions"><input placeholder="修改分组"/><button>改组</button></div><div class="actions"><button>启动</button><button>分发EA</button><button>分发指标</button></div></article>
   </section>
 </body>
 </html>
